@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mental Health Mood Tracker</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(to bottom, #ffe0f0, #ffffff);
+        display: flex;
+        justify-content: center;
+        padding: 50px 10px;
+    }
+    .container {
+        background: #fff;
+        border-radius: 15px;
+        padding: 30px;
+        width: 400px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    h1 { text-align: center; color: #d81b60; }
+    p.subtitle { text-align: center; color: #555; margin-bottom: 20px; }
+    .mood-options {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        font-size: 28px;
+        cursor: pointer;
+    }
+    .mood-options span.selected {
+        transform: scale(1.4);
+        transition: transform 0.2s;
+    }
+    textarea {
+        width: 100%;
+        height: 50px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+        padding: 5px;
+        resize: none;
+    }
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #d81b60;
+        color: #fff;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    button:hover { background-color: #a31544; }
+    .history, .suggestion {
+        margin-top: 25px;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #fce4ec;
+        border: 1px solid #f8bbd0;
+    }
+    .history-item { display: flex; justify-content: space-between; margin: 5px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Mental Health Mood Tracker</h1>
+    <p class="subtitle">Select your mood today</p>
+
+    <div class="mood-options">
+        <span data-mood="😞">😞</span>
+        <span data-mood="😐">😐</span>
+        <span data-mood="🙂">🙂</span>
+        <span data-mood="😄">😄</span>
+        <span data-mood="😁">😁</span>
+    </div>
+
+    <textarea id="note" placeholder="Optional: Add a note about your mood..."></textarea>
+
+    <button onclick="submitMood()">Save Mood</button>
+
+    <div class="suggestion" id="suggestion" style="display:none;"></div>
+    <div class="history" id="history"></div>
+</div>
+
+<script>
+    const moodOptions = document.querySelectorAll('.mood-options span');
+    let selectedMood = '';
+
+    moodOptions.forEach(span => {
+        span.addEventListener('click', () => {
+            selectedMood = span.getAttribute('data-mood');
+            moodOptions.forEach(s => s.classList.remove('selected'));
+            span.classList.add('selected');
+        });
+    });
+
+    let moodsHistory = JSON.parse(localStorage.getItem('moodHistory')) || [];
+
+    function renderHistory() {
+        const historyDiv = document.getElementById('history');
+        if (moodsHistory.length === 0) {
+            historyDiv.innerHTML = "<p>No mood records yet.</p>";
+            return;
+        }
+        historyDiv.innerHTML = "<h4>Past Mood Records:</h4>";
+        moodsHistory.slice(-7).reverse().forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `<span>${entry.date}</span><span>${entry.mood}</span>`;
+            historyDiv.appendChild(div);
+        });
+    }
+
+    renderHistory();
+
+    function submitMood() {
+        if(!selectedMood) {
+            alert("Please select a mood before saving!");
+            return;
+        }
+        const note = document.getElementById('note').value;
+        const today = new Date().toLocaleDateString();
+
+        moodsHistory.push({ date: today, mood: selectedMood, note });
+        localStorage.setItem('moodHistory', JSON.stringify(moodsHistory));
+        renderHistory();
+        showSuggestion(selectedMood);
+        document.getElementById('note').value = '';
+        moodOptions.forEach(s => s.classList.remove('selected'));
+        selectedMood = '';
+    }
+
+    function showSuggestion(mood) {
+        const suggestionDiv = document.getElementById('suggestion');
+        let text = '';
+        if (mood === '😞') text = 'Try a 5-min breathing exercise.';
+        else if (mood === '😐') text = 'Take a short walk or stretch.';
+        else if (mood === '🙂') text = 'Write down one thing you’re grateful for.';
+        else if (mood === '😄' || mood === '😁') text = 'Keep spreading positivity!';
+        suggestionDiv.style.display = 'block';
+        suggestionDiv.innerHTML = `<h4>Tip / Exercise:</h4><p>${text}</p>`;
+    }
+</script>
+</body>
+</html>
